@@ -1,0 +1,292 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans bg-cream text-navy antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading text-navy;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-soft;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* ===== Premium Button Animations ===== */
+
+/* Wide shine sweep */
+@keyframes shine-sweep-pro {
+  0% { left: -200%; }
+  100% { left: 200%; }
+}
+
+button:hover .btn-shine-pro,
+a:hover .btn-shine-pro,
+div:hover .btn-shine-pro {
+  animation: shine-sweep-pro 0.7s ease-in-out;
+}
+
+/* Icon animation: nudge + slight bounce */
+button:hover .btn-icon-anim,
+a:hover .btn-icon-anim,
+div:hover .btn-icon-anim {
+  transform: translateX(5px);
+  animation: icon-bounce 0.4s ease 0.1s;
+}
+
+@keyframes icon-bounce {
+  0% { transform: translateX(0); }
+  40% { transform: translateX(7px); }
+  70% { transform: translateX(3px); }
+  100% { transform: translateX(5px); }
+}
+
+/* Bottom glow line expand */
+button:hover .btn-glow-line,
+a:hover .btn-glow-line,
+div:hover .btn-glow-line {
+  width: 60%;
+}
+
+/* ===== Campaign Card Button Fill Effect ===== */
+.btn-fill-hover {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-fill-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #0B4F3A, #0e6b4e);
+  transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+}
+
+.btn-fill-hover:hover::before {
+  left: 0%;
+}
+
+.btn-fill-hover:hover {
+  color: white;
+  border-color: #0B4F3A;
+}
+
+/* ===== Floating animations ===== */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(1.05); }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 4s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 4s ease-in-out infinite;
+}
+
+/* ===== Focus Area Premium Card System ===== */
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes border-spin {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+
+/* --- Layered depth card (offset background) --- */
+.focus-card {
+  position: relative;
+  background: white;
+  z-index: 1;
+}
+
+.focus-card::before {
+  content: '';
+  position: absolute;
+  inset: 6px -4px -6px 4px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--card-accent, #C6A969) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  z-index: -1;
+  transform: translate(0, 0);
+}
+
+.focus-card:hover::before {
+  opacity: 0.12;
+  transform: translate(4px, 4px);
+}
+
+/* --- Animated gradient border with wider beam --- */
+.focus-card::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--angle, 0deg),
+    transparent 20%,
+    var(--card-accent, #C6A969) 30%,
+    color-mix(in srgb, var(--card-accent, #C6A969) 60%, white) 35%,
+    var(--card-accent, #C6A969) 40%,
+    transparent 50%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  animation: border-spin 3s linear infinite;
+  z-index: -1;
+}
+
+.focus-card:hover::after {
+  opacity: 1;
+}
+
+/* --- Inner glow on hover --- */
+.focus-card-inner {
+  position: relative;
+  overflow: hidden;
+}
+
+.focus-card-inner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: radial-gradient(
+    ellipse at top center,
+    color-mix(in srgb, var(--card-accent, #C6A969) 15%, transparent) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.focus-card:hover .focus-card-inner::before {
+  opacity: 1;
+}
+
+/* --- Decorative corner brackets --- */
+.corner-brackets {
+  position: relative;
+}
+
+.corner-brackets .corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.corner-brackets .corner-tl {
+  top: 12px;
+  left: 12px;
+  border-top: 2px solid var(--card-accent, #C6A969);
+  border-left: 2px solid var(--card-accent, #C6A969);
+  border-top-left-radius: 4px;
+  transform: translate(4px, 4px);
+}
+
+.corner-brackets .corner-tr {
+  top: 12px;
+  right: 12px;
+  border-top: 2px solid var(--card-accent, #C6A969);
+  border-right: 2px solid var(--card-accent, #C6A969);
+  border-top-right-radius: 4px;
+  transform: translate(-4px, 4px);
+}
+
+.corner-brackets .corner-bl {
+  bottom: 12px;
+  left: 12px;
+  border-bottom: 2px solid var(--card-accent, #C6A969);
+  border-left: 2px solid var(--card-accent, #C6A969);
+  border-bottom-left-radius: 4px;
+  transform: translate(4px, -4px);
+}
+
+.corner-brackets .corner-br {
+  bottom: 12px;
+  right: 12px;
+  border-bottom: 2px solid var(--card-accent, #C6A969);
+  border-right: 2px solid var(--card-accent, #C6A969);
+  border-bottom-right-radius: 4px;
+  transform: translate(-4px, -4px);
+}
+
+.focus-card:hover .corner {
+  opacity: 0.6;
+  transform: translate(0, 0);
+}
+
+/* --- Side accent strip with notch --- */
+.accent-strip {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 4px;
+  height: 40%;
+  transform: translateY(-50%);
+  background: var(--card-accent, #C6A969);
+  border-radius: 0 4px 4px 0;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-card:hover .accent-strip {
+  opacity: 0.7;
+  height: 60%;
+}
