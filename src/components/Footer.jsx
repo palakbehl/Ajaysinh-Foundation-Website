@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FiHeart, FiMapPin, FiPhone, FiMail, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiArrowRight } from 'react-icons/fi';
+import { FiHeart, FiMapPin, FiPhone, FiMail, FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiArrowRight, FiShield } from 'react-icons/fi';
 
 const Footer = () => {
   return (
@@ -41,6 +41,12 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link to="/admin/login" className="hover:text-gold transition-colors text-sm flex items-center gap-2 group text-white/70">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 group-hover:bg-emerald-300 transition-colors"></span>
+                  <FiShield className="text-xs text-emerald-400" /> Admin Portal
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -86,9 +92,12 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
           <p>&copy; {new Date().getFullYear()} Ajaysinh Foundation. All rights reserved.</p>
-          <div className="flex gap-6">
+          <div className="flex items-center gap-6">
             <Link to="/privacy" className="hover:text-gold transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-gold transition-colors">Terms of Service</Link>
+            <Link to="/admin/login" className="hover:text-gold transition-colors flex items-center gap-1.5 text-white/50 hover:text-white">
+              <FiShield className="text-xs text-emerald-400" /> Admin Portal
+            </Link>
           </div>
         </div>
       </div>

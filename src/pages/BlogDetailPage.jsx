@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   FiHome,
@@ -12,26 +12,86 @@ import {
   FiHeart,
   FiArrowRight,
   FiBookOpen,
-  FiAlertCircle
+  FiAlertCircle,
+  FiLoader
 } from 'react-icons/fi';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaWhatsapp } from 'react-icons/fa';
-import { getBlogById, blogs } from '../data/blogs';
+import { getBlogById, blogs as staticBlogs } from '../data/blogs';
+import blogService from '../services/blogService';
 
 const BlogDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const blog = getBlogById(id);
+  const staticFallback = getBlogById(id);
+  const [blog, setBlog] = useState(staticFallback);
+  const [loading, setLoading] = useState(!staticFallback);
 
   // Search input state
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLiveBlog = async () => {
+      try {
+        const res = await blogService.getBlogByIdOrSlug(id);
+        if (res && res.blog && isMounted) {
+          const apiBlog = res.blog;
+          setBlog({
+            id: apiBlog._id,
+            slug: apiBlog.slug,
+            title: apiBlog.title,
+            category: apiBlog.category || 'Community',
+            excerpt: apiBlog.excerpt,
+            image: apiBlog.featuredImage?.url || apiBlog.image || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
+            author: apiBlog.author && typeof apiBlog.author === 'object' ? {
+              name: apiBlog.author.name || 'Ajaysinh Foundation',
+              title: apiBlog.author.title || 'Editorial Team',
+              avatar: apiBlog.author.avatar || 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=60&q=80'
+            } : {
+              name: apiBlog.author || 'Ajaysinh Foundation',
+              title: 'Editorial Team',
+              avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=60&q=80'
+            },
+            date: apiBlog.createdAt ? new Date(apiBlog.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+            readTime: apiBlog.readTime || '5 min read',
+            quote: apiBlog.quote || '',
+            content: apiBlog.content || '',
+          });
+        }
+      } catch (err) {
+        if (!staticFallback && isMounted) {
+          setBlog(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchLiveBlog();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   // Handle Search Widget redirection
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    // Redirect to main blogs page with a search query or category state
     navigate(`/blogs?search=${encodeURIComponent(searchQuery)}`);
   };
+
+  if (loading) {
+    return (
+      <div className="pt-32 pb-24 min-h-screen flex flex-col items-center justify-center text-center px-4 bg-cream">
+        <FiLoader className="w-12 h-12 text-primary animate-spin mb-4" />
+        <h2 className="text-xl font-bold text-navy">Loading Story...</h2>
+      </div>
+    );
+  }
 
   // 404 Fallback
   if (!blog) {
@@ -57,8 +117,8 @@ const BlogDetailPage = () => {
   const { title, category, excerpt, image, author, date, readTime, quote, content } = blog;
 
   // Filter out the current article to show 3 other latest posts in the sidebar
-  const latestPosts = blogs
-    .filter((b) => b.id !== blog.id)
+  const latestPosts = (staticBlogs || [])
+    .filter((b) => String(b.id) !== String(blog.id) && String(b.id) !== String(blog.slug))
     .slice(0, 3);
 
   return (
@@ -150,19 +210,40 @@ const BlogDetailPage = () => {
 
               {/* Rich Body Content paragraphs */}
               <div className="prose max-w-none text-navy/70 space-y-6 leading-relaxed">
-                {content.map((block, idx) => {
-                  if (block.type === 'paragraph') {
-                    return <p key={idx} className="text-sm md:text-base">{block.text}</p>;
-                  }
-                  if (block.type === 'heading') {
+                {Array.isArray(content) ? (
+                  content.map((block, idx) => {
+                    if (block.type === 'paragraph') {
+                      return <p key={idx} className="text-sm md:text-base">{block.text}</p>;
+                    }
+                    if (block.type === 'heading') {
+                      return (
+                        <h3 key={idx} className="text-xl md:text-2xl font-heading font-bold text-navy mt-10 mb-4">
+                          {block.text}
+                        </h3>
+                      );
+                    }
+                    return null;
+                  })
+                ) : typeof content === 'string' ? (
+                  content.split('\n\n').map((paragraph, idx) => {
+                    const trimmed = paragraph.trim();
+                    if (!trimmed) return null;
+                    if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
+                      return (
+                        <h3 key={idx} className="text-xl md:text-2xl font-heading font-bold text-navy mt-8 mb-4">
+                          {trimmed.replace(/^#+\s*/, '')}
+                        </h3>
+                      );
+                    }
                     return (
-                      <h3 key={idx} className="text-xl md:text-2xl font-heading font-bold text-navy mt-10 mb-4">
-                        {block.text}
-                      </h3>
+                      <p key={idx} className="text-sm md:text-base leading-relaxed">
+                        {trimmed}
+                      </p>
                     );
-                  }
-                  return null;
-                })}
+                  })
+                ) : (
+                  <p className="text-sm md:text-base">{String(content || '')}</p>
+                )}
               </div>
 
               {/* Dynamically Loaded Editorial Pull-Quote */}

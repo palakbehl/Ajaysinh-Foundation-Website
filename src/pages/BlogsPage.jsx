@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FiHome, FiChevronRight, FiArrowLeft, FiArrowRight, FiHeart } from 'react-icons/fi';
 import { blogs } from '../data/blogs';
+import blogService from '../services/blogService';
 import FeaturedBlog from '../components/blogs/FeaturedBlog';
 import CategoryFilter from '../components/blogs/CategoryFilter';
 import BlogCard from '../components/blogs/BlogCard';
@@ -45,14 +46,47 @@ const videoStories = [
 const BlogsPage = () => {
   const [activeCategory, setActiveCategory] = useState('All Stories');
   const [currentPage, setCurrentPage] = useState(1);
+  const [blogList, setBlogList] = useState(blogs);
   const itemsPerPage = 6;
 
+  useEffect(() => {
+    const fetchLiveBlogs = async () => {
+      try {
+        const res = await blogService.getBlogs();
+        if (res && res.blogs && res.blogs.length > 0) {
+          const mapped = res.blogs.map((b) => ({
+            id: b.slug || b._id,
+            title: b.title,
+            category: b.category || 'Community',
+            slug: b.slug,
+            excerpt: b.excerpt,
+            image: b.featuredImage?.url || b.image || 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=800&q=80',
+            author: b.author || {
+              name: 'Ajaysinh Foundation',
+              avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=60&q=80',
+              title: 'Editorial Lead',
+            },
+            date: b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+            readTime: b.readTime || '5 min read',
+            tags: b.tags || ['Community', 'Impact'],
+            quote: b.quote || '',
+            content: b.content,
+          }));
+          setBlogList(mapped);
+        }
+      } catch (err) {
+        // Fallback to static blogs
+      }
+    };
+    fetchLiveBlogs();
+  }, []);
+
   // The first blog is featured at the top
-  const featuredBlog = blogs[0];
+  const featuredBlog = blogList[0] || blogs[0];
 
   // Filter out the featured blog in "All Stories" view to avoid duplicate listings in the grid,
   // but keep it in category searches to ensure all articles are discoverable!
-  const filteredBlogs = blogs.filter((blog) => {
+  const filteredBlogs = blogList.filter((blog) => {
     const matchesCategory =
       activeCategory === 'All Stories' || blog.category === activeCategory;
     const isFeatured = activeCategory === 'All Stories' && blog.id === featuredBlog.id;

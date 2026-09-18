@@ -80,6 +80,14 @@ const Navbar = () => {
           >
             <FiHeart /> Donate Now
           </Link>
+          <Link
+            to="/admin/login"
+            title="Admin Portal"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-full border border-gray-200 text-navy hover:text-primary hover:border-primary/40 hover:bg-gray-50 transition-all shadow-xs"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Admin</span>
+          </Link>
         </div>
 
         {/* Mobile Toggle */}
@@ -117,6 +125,13 @@ const Navbar = () => {
                 className="bg-gold text-navy font-semibold px-6 py-3 rounded-xl text-center mt-2 flex justify-center items-center gap-2"
               >
                 <FiHeart /> Donate Now
+              </Link>
+              <Link
+                to="/admin/login"
+                className="text-center text-sm font-medium text-slate-500 hover:text-primary py-2.5 flex items-center justify-center gap-2 border-t border-gray-100 mt-2"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Admin Portal Login</span>
               </Link>
             </div>
           </motion.div>

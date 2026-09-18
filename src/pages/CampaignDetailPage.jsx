@@ -1,6 +1,8 @@
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { useState, useEffect } from 'react';
 import { getCampaignById } from '../data/campaigns';
+import campaignService from '../services/campaignService';
 import CampaignDetailHero from '../components/campaign-detail/CampaignDetailHero';
 import CampaignOverview from '../components/campaign-detail/CampaignOverview';
 import DonationSidebar from '../components/campaign-detail/DonationSidebar';
@@ -12,11 +14,72 @@ import CampaignFAQ from '../components/campaign-detail/CampaignFAQ';
 import ShareSupport from '../components/campaign-detail/ShareSupport';
 import RelatedCampaigns from '../components/campaign-detail/RelatedCampaigns';
 import FinalDonationCTA from '../components/campaign-detail/FinalDonationCTA';
-import { FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
+import { FiAlertCircle, FiArrowLeft, FiLoader } from 'react-icons/fi';
 
 const CampaignDetailPage = () => {
   const { id } = useParams();
-  const campaign = getCampaignById(id);
+  const staticFallback = getCampaignById(id);
+  const [campaign, setCampaign] = useState(staticFallback);
+  const [loading, setLoading] = useState(!staticFallback);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLiveCampaign = async () => {
+      try {
+        const res = await campaignService.getCampaignByIdOrSlug(id);
+        if (res && res.campaign && isMounted) {
+          const apiCampaign = res.campaign;
+          // Normalize to component schema
+          setCampaign({
+            id: apiCampaign._id,
+            title: apiCampaign.title,
+            description: apiCampaign.description,
+            image: apiCampaign.featuredImage?.url || apiCampaign.image,
+            raised: apiCampaign.raisedAmount ?? 0,
+            goal: apiCampaign.goalAmount ?? 100000,
+            category: apiCampaign.category,
+            donors: apiCampaign.donors ?? 12,
+            beneficiaries: apiCampaign.beneficiaries || '100+',
+            daysLeft: apiCampaign.daysLeft || 30,
+            status: apiCampaign.status || 'Active',
+            overview: apiCampaign.overview || staticFallback?.overview || {
+              text: apiCampaign.description,
+              checklist: ['Community impact initiatives', 'Direct on-ground aid support'],
+              stats: [],
+            },
+            impactBreakdown: apiCampaign.impactBreakdown || staticFallback?.impactBreakdown || [],
+            gallery: apiCampaign.gallery?.map((g) => g.url) || staticFallback?.gallery || [],
+            updates: apiCampaign.updates || staticFallback?.updates || [],
+            stories: apiCampaign.stories || staticFallback?.stories || [],
+            faqs: apiCampaign.faqs || staticFallback?.faqs || [],
+          });
+        }
+      } catch (err) {
+        // If API fails or not found, keep static fallback if available
+        if (!staticFallback && isMounted) {
+          setCampaign(null);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchLiveCampaign();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="pt-32 pb-24 min-h-screen flex flex-col items-center justify-center text-center px-4 bg-cream">
+        <FiLoader className="w-10 h-10 text-primary animate-spin mb-4" />
+        <p className="text-navy/60">Loading campaign details...</p>
+      </div>
+    );
+  }
 
   if (!campaign) {
     return (

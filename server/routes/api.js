@@ -1,19 +1,30 @@
 import express from 'express';
+import adminRoutes from './adminRoutes.js';
+import campaignRoutes from './campaignRoutes.js';
+import blogRoutes from './blogRoutes.js';
+import donationRoutes from './donationRoutes.js';
+import volunteerRoutes from './volunteerRoutes.js';
+import csrRoutes from './csrRoutes.js';
+import contactRoutes from './contactRoutes.js';
+import uploadRoutes from './uploadRoutes.js';
 
 const router = express.Router();
 
 // Health Check
-router.get('/', (req, res) => res.json({ message: 'API API Routes Working' }));
+router.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Ajaysinh Foundation API is running' });
+});
 
-// Placeholder routes for Campaign
-router.get('/campaigns', (req, res) => res.json({ message: 'Get all campaigns' }));
-router.get('/campaigns/:slug', (req, res) => res.json({ message: `Get campaign ${req.params.slug}` }));
-
-// Placeholder routes for Blog
-router.get('/blogs', (req, res) => res.json({ message: 'Get all blogs' }));
-router.get('/blogs/:slug', (req, res) => res.json({ message: `Get blog ${req.params.slug}` }));
-
-// Placeholder route for Donation
-router.post('/donations/create-order', (req, res) => res.json({ message: 'Create razorpay order' }));
+// Mount modular sub-routers
+router.use('/admin', adminRoutes);
+router.use('/campaigns', campaignRoutes);
+router.use('/blogs', blogRoutes);
+router.use('/donations', donationRoutes);
+router.use('/volunteers', volunteerRoutes);
+router.use('/csr', csrRoutes);
+router.use('/csr-inquiries', csrRoutes);
+router.use('/contact', contactRoutes);
+router.use('/messages', contactRoutes);
+router.use('/upload', uploadRoutes);
 
 export default router;

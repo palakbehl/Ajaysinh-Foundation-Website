@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiSearch } from 'react-icons/fi';
 import CampaignCard from './CampaignCard';
+import campaignService from '../../services/campaignService';
 
 const campaigns = [
   {
@@ -123,8 +125,36 @@ const CampaignGrid = ({
   status = '',
   sortBy = 'Most Recent',
 }) => {
+  const [activeList, setActiveList] = useState(campaigns);
+
+  useEffect(() => {
+    const fetchLive = async () => {
+      try {
+        const res = await campaignService.getCampaigns();
+        if (res && res.campaigns && res.campaigns.length > 0) {
+          const mapped = res.campaigns.map((c) => ({
+            id: c.slug || c._id,
+            title: c.title,
+            description: c.shortDescription || c.description,
+            image: c.featuredImage?.url || c.image || 'https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&w=600&q=80',
+            raised: c.raisedAmount ?? 0,
+            goal: c.goalAmount ?? 100000,
+            category: c.category,
+            beneficiaries: c.beneficiaries || '100+',
+            daysLeft: c.daysLeft || 30,
+            status: c.status || 'Active',
+          }));
+          setActiveList(mapped);
+        }
+      } catch (err) {
+        // Fallback to static campaigns on error
+      }
+    };
+    fetchLive();
+  }, []);
+
   // Filter logic
-  let filtered = campaigns.filter((c) => {
+  let filtered = activeList.filter((c) => {
     const matchesSearch =
       !searchTerm ||
       c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
